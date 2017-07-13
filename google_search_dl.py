@@ -43,7 +43,7 @@ def download_file(url, out_path):
 def gethtml(url):
     return urlopen(
         Request(url, headers=request_headers)
-    ).read().decode('utf-8')
+    ).read().decode('utf-8', 'ignore)
 
 def search_url (url, folder_name, format):
     ext = '.%s'%(format)
