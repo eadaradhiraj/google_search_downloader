@@ -8,7 +8,7 @@ Goes through google search results and tries to find downloadable links with the
 Dependencies
 ------------
 
-  * Python 2.7
+  * Python 3
   * BeautifulSoup (``pip install beautifulsoup4``)
   * google (``pip install google``)
   * fileDownloader.py (``pip install fileDownloader.py``)
