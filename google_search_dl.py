@@ -3,28 +3,47 @@
 
 # Lit of libraries needed to run the programme
 import threading
-import urllib2
-import time
 import os
 import sys
 import traceback
-import fileDownloader
 from bs4 import BeautifulSoup
 from google import search
-from urlparse import urljoin
+from urllib.request import Request, urlopen
+from urllib.parse import urljoin
 
+request_headers = {
+    "Accept-Language": "en-US,en;q=0.5",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Referer": "http://thewebsite.com",
+    "Connection": "keep-alive"
+}
 
-def Soup(htm):
-    return BeautifulSoup(htm, 'html.parser')
+def download_file(url, out_path):
+    u = urlopen(url)
+    f = open(out_path, 'wb')
+    meta = u.info()
+    file_size = int(meta['Content-Length'])
+    print ("Downloading: %s Bytes: %s" % (out_path, file_size))
 
+    file_size_dl = 0
+    block_sz = 8192
+    while True:
+        buffer = u.read(block_sz)
+        if not buffer:
+            break
+        file_size_dl += len(buffer)
+        f.write(buffer)
+        status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
+        status = status + chr(8)*(len(status)+1)
+        print(status, end="\r")
+    f.close()
 
 # The following acquires the html source code using urllib2
 def gethtml(url):
-    time.sleep(2)
-    req = urllib2.Request(url, headers={'User-Agent': "Magic Browser"})
-    con = urllib2.urlopen(req)
-    html = con.read()
-    return html
+    return urlopen(
+        Request(url, headers=request_headers)
+    ).read().decode('utf-8')
 
 def search_url (url, folder_name, format):
     ext = '.%s'%(format)
@@ -33,15 +52,15 @@ def search_url (url, folder_name, format):
         if 'github.com' in url:
             url = url.replace('blob', 'raw')
         try:
-            fileDownloader.DownloadFile(url=url,
-                                        localFileName=os.path.join(folder_name, url.split('/')[-1])).download()
+            download_file(url=url,
+                          out_path=os.path.join(folder_name, url.split('/')[-1]))
         except:
             traceback.print_exc()
             return
 
     else:
         try:
-            soup = Soup(gethtml(url))
+            soup = BeautifulSoup(gethtml(url), 'html.parser')
         except:
             traceback.print_exc()
             return
@@ -55,8 +74,8 @@ def search_url (url, folder_name, format):
                     if 'github.com' in href:
                         href = href.replace('blob', 'raw')
                     print(href)
-                    fileDownloader.DownloadFile(url=href,
-                                                localFileName=os.path.join(folder_name,href.split('/')[-1])).download()
+                    download_file(url=href,
+                                  out_path=os.path.join(folder_name,href.split('/')[-1]))
             except:
                 traceback.print_exc()
                 continue
